@@ -52,10 +52,14 @@ function CubieMesh({ cubie, turn, beginSwipe, endSwipe }: {
   const baseAngle = turn ? DIR[turn.move[0] as keyof typeof DIR] * Math.PI/2 * (turn.move.endsWith("'") ? -1 : 1) * (turns===2?2:1) : 0;
   const progressAngle = baseAngle * (turn?.progress ?? 0);
 
-  const position:[number,number,number] = [cubie.p[0]*0.62,-cubie.p[1]*0.62,cubie.p[2]*0.62];
-  const groupProps:any = { position, rotation:[0,0,0] };
+  const base = new THREE.Vector3(cubie.p[0]*0.62,-cubie.p[1]*0.62,cubie.p[2]*0.62);
+  const position:[number,number,number] = [base.x,base.y,base.z];
   if (affected) {
-    groupProps.position=[0,0,0];
+    const axisVector = axis==="x" ? new THREE.Vector3(1,0,0) : axis==="y" ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
+    base.applyAxisAngle(axisVector, progressAngle);
+  }
+  const groupProps:any = { position:[base.x,base.y,base.z], rotation:[0,0,0] };
+  if (affected) {
     groupProps.rotation=axis==="x"?[progressAngle,0,0]:axis==="y"?[0,progressAngle,0]:[0,0,progressAngle];
   }
 
