@@ -3,27 +3,22 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "vercel-build": "next build"
   },
   "dependencies": {
-    "framer-motion": "^11.0.3",
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18",
-    "three": "^0.161.0",
+    "framer-motion": "^11.0.3",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.1.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }
 }
