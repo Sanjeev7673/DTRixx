@@ -266,8 +266,8 @@ export function validateFacelets(facelets: string, size = 3) {
   const expected = size * size;
   if (facelets.length !== expected * 6) return false;
   const allowed = new Set(FACES);
-  if ([...facelets].some((x) => !allowed.has(x as Face))) return false;
-  return FACES.every((face) => [...facelets].filter((x) => x === face).length === expected);
+  if (facelets.split("").some((x) => !allowed.has(x as Face))) return false;
+  return FACES.every((face) => facelets.split("").filter((x) => x === face).length === expected);
 }
 
 export const patterns = [
