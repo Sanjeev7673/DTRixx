@@ -7,7 +7,7 @@ import {
   patterns, progressPercent, scramble as makeScramble, tokenizeMoves, validateNotation, type Cubie
 } from "../lib/cube";
 
-const Cube3D=dynamic(()=>import("../components/Cube3D"),{ssr:false,loading:()=> <div className="cube-loading">Loading cube engine…</div>});
+const Cube3D=dynamic(()=>import("../components/Cube3D"),{ssr:false});
 const SIZES=Array.from({length:14},(_,i)=>i+2);
 const PAINT_COLORS:Record<string,string>={U:"#f8fafc",R:"#ff934d",F:"#36d399",D:"#ffd54a",L:"#ff5f73",B:"#5b8cff"};
 const FACES=["U","R","F","D","L","B"] as const;
