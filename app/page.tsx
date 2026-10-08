@@ -1,202 +1,138 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { PointerEvent } from "react";
-import { applyMove, cloneCube, initialCube, invertMove, isSolved, progressPercent, scramble as makeScramble, type Cubie, type Sticker } from "../lib/cube";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { applyMove, cloneCube, initialCube, invertMove, isSolved, progressPercent, scramble as makeScramble, type Cubie } from "../lib/cube";
 
-const faces = ["U","D","L","R","F","B"] as const;
-const modes = [
-  { id: "daily", title: "Daily 5", sub: "A quick daily brain reset", limit: 300 },
-  { id: "interview", title: "Interview 60", sub: "60 seconds. One challenge.", limit: 60 },
-  { id: "practice", title: "Practice", sub: "Explore without pressure", limit: 0 }
-];
+const Cube3D = dynamic(() => import("../components/Cube3D"), { ssr:false, loading:()=> <div className="cube-loading">Loading 3D cube…</div> });
+const faces=["U","R","F","D","L","B"] as const;
+const modes=[{id:"daily",name:"Daily 5",time:300},{id:"interview",name:"Interview 60",time:60},{id:"practice",name:"Free Play",time:0}];
 
-function CubieFace({ color, face }: { color: string; face: "front"|"back"|"right"|"left"|"top"|"bottom" }) {
-  return <span className={`cubie-face ${face}`} style={{ background: color }} />;
-}
-
-function CubeView({ cube }: { cube: Cubie[] }) {
-  const drag = useRef<{x:number;y:number}|null>(null);
-  const [rotation, setRotation] = useState({x:-28,y:-38});
-  const [autoRotate, setAutoRotate] = useState(false);
-
-  useEffect(() => {
-    if (!autoRotate) return;
-    const id = window.setInterval(() => {
-      setRotation(r => ({ x: r.x, y: r.y + 1.1 }));
-    }, 30);
-    return () => window.clearInterval(id);
-  }, [autoRotate]);
-
-  const down = (e: PointerEvent<HTMLDivElement>) => {
-    if (autoRotate) return;
-    drag.current = { x: e.clientX, y: e.clientY };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const move = (e: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current || autoRotate) return;
-    const dx = e.clientX - drag.current.x;
-    const dy = e.clientY - drag.current.y;
-    drag.current = { x: e.clientX, y: e.clientY };
-    setRotation(r => ({ x: Math.max(-88, Math.min(88, r.x + dy * 0.5)), y: r.y + dx * 0.5 }));
-  };
-
-  const up = () => { drag.current = null; };
-
-  const colorAt = (cubie: Cubie, normal: [number,number,number]) =>
-    cubie.stickers.find(s => s.n[0] === normal[0] && s.n[1] === normal[1] && s.n[2] === normal[2])?.color ?? "#151a2b";
-
-  return <div className="cube-stage" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
-    <div className="cube-wrap">
-      <div className="cube" style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}>
-        {cube.map(c => (
-          <div key={c.id} className="cubie" style={{
-            transform: `translate3d(${c.p[0] * 62}px,${-c.p[1] * 62}px,${c.p[2] * 62}px)`
-          }}>
-            <CubieFace face="front" color={colorAt(c,[0,0,1])} />
-            <CubieFace face="back" color={colorAt(c,[0,0,-1])} />
-            <CubieFace face="right" color={colorAt(c,[1,0,0])} />
-            <CubieFace face="left" color={colorAt(c,[-1,0,0])} />
-            <CubieFace face="top" color={colorAt(c,[0,1,0])} />
-            <CubieFace face="bottom" color={colorAt(c,[0,-1,0])} />
-          </div>
-        ))}
-      </div>
-    </div>
-    <button
-      type="button"
-      className={autoRotate ? "view-toggle active" : "view-toggle"}
-      onClick={(e) => { e.stopPropagation(); setAutoRotate(v => !v); }}
-    >
-      {autoRotate ? "⏸ Stop 360°" : "↻ 360° View"}
-    </button>
-  </div>;
-}
-export default function Home() {
-  const [cube,setCube] = useState<Cubie[]>(initialCube());
-  const [history,setHistory] = useState<string[]>([]);
-  const [future,setFuture] = useState<string[]>([]);
-  const [scramble,setScramble] = useState<string[]>([]);
-  const [mode,setMode] = useState("daily");
-  const [started,setStarted] = useState<number|null>(null);
-  const [elapsed,setElapsed] = useState(0);
-  const [best,setBest] = useState(0);
-  const [tab,setTab] = useState("Play");
-  const [notice,setNotice] = useState("Scramble the cube, then solve it with direct controls or your keyboard.");
-  const limit = modes.find(m=>m.id===mode)?.limit ?? 0;
-  const solved = isSolved(cube);
-  const progress = progressPercent(cube);
-  const currentMoves = useMemo(()=>history.slice(-12),[history]);
+export default function Home(){
+  const [cube,setCube]=useState<Cubie[]>(initialCube());
+  const [history,setHistory]=useState<string[]>([]);
+  const [future,setFuture]=useState<string[]>([]);
+  const [scramble,setScramble]=useState<string[]>([]);
+  const [mode,setMode]=useState("daily");
+  const [elapsed,setElapsed]=useState(0);
+  const [started,setStarted]=useState<number|null>(null);
+  const [best,setBest]=useState(0);
+  const [menu,setMenu]=useState<"moves"|"learn"|"stats"|null>(null);
+  const limit=modes.find(m=>m.id===mode)?.time??0;
+  const solved=isSolved(cube);
+  const progress=progressPercent(cube);
+  const remaining=limit?Math.max(0,limit-elapsed):elapsed;
 
   useEffect(()=>{setBest(Number(localStorage.getItem("cube-mind-best")||0));},[]);
   useEffect(()=>{
-    if(!started) return;
+    if(!started)return;
     const id=window.setInterval(()=>{
-      const sec=Math.floor((Date.now()-started)/1000);
-      setElapsed(limit?Math.min(limit,sec):sec);
-      if(limit && sec>=limit){setStarted(null);setNotice("Time is up. Reset or scramble for another attempt.");}
-    },200);
+      const seconds=Math.floor((Date.now()-started)/1000);
+      setElapsed(limit?Math.min(limit,seconds):seconds);
+      if(limit && seconds>=limit)setStarted(null);
+    },100);
     return()=>clearInterval(id);
   },[started,limit]);
 
-  useEffect(()=>{
-    if(solved && started){
-      const sec=Math.floor((Date.now()-started)/1000);
-      setElapsed(sec);setStarted(null);
-      if(!best || sec<best){setBest(sec);localStorage.setItem("cube-mind-best",String(sec));}
-      setNotice("Solved. Great attempt — your gameplay metrics are ready to review.");
-    }
-  },[solved,started,best]);
-
-  const move = (m:string) => {
-    if(!started && !solved && limit) setStarted(Date.now());
-    setCube(c=>applyMove(c,m));
-    setHistory(h=>[...h,m]);
+  const commitMove=(move:string)=>{
+    if(limit && !started && !solved)setStarted(Date.now());
+    setCube(c=>applyMove(c,move));
+    setHistory(h=>[...h,move]);
     setFuture([]);
-    setNotice(`Move ${m} recorded.`);
   };
 
+  const requestMove=(move:string)=>{
+    if(limit && !started && !solved)setStarted(Date.now());
+    // Cube3D animates the move first and calls commitMove after the 90° turn.
+    (window as any).__cubeMindMove?.(move);
+  };
+
+  const onCubeMove=(move:string)=>commitMove(move);
+
   useEffect(()=>{
-    const onKey=(e:KeyboardEvent)=>{
-      if(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)return;
+    const key=(e:KeyboardEvent)=>{
+      if(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;
       const map:Record<string,string>={u:"U",d:"D",l:"L",r:"R",f:"F",b:"B"};
       const m=map[e.key.toLowerCase()];
       if(!m)return;
       e.preventDefault();
-      move(e.shiftKey?m+"'":m);
+      requestMove(e.shiftKey?m+"'":m);
     };
-    window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);
+    window.addEventListener("keydown",key);
+    return()=>window.removeEventListener("keydown",key);
   });
 
-  const doScramble=()=>{
+  const scrambleCube=()=>{
     const seq=makeScramble(mode==="interview"?18:20);
     setCube(c=>seq.reduce((v,m)=>applyMove(v,m),cloneCube(c)));
     setScramble(seq);setHistory([]);setFuture([]);setElapsed(0);setStarted(null);
-    setNotice("Scrambled. The timer starts on your first move.");
   };
-  const reset=()=>{
-    setCube(initialCube());setScramble([]);setHistory([]);setFuture([]);setElapsed(0);setStarted(null);
-    setNotice("Cube reset. Ready when you are.");
-  };
-  const undo=()=>{
-    const m=history.at(-1);if(!m)return;
-    setCube(c=>applyMove(c,invertMove(m)));setHistory(h=>h.slice(0,-1));setFuture(f=>[m,...f]);
-  };
-  const redo=()=>{
-    const m=future[0];if(!m)return;
-    setCube(c=>applyMove(c,m));setFuture(f=>f.slice(1));setHistory(h=>[...h,m]);
-  };
-  const startDaily=()=>{setMode("daily");reset();setTab("Play");};
+  const reset=()=>{setCube(initialCube());setHistory([]);setFuture([]);setScramble([]);setElapsed(0);setStarted(null);};
+  const undo=()=>{const m=history.at(-1);if(!m)return;setCube(c=>applyMove(c,invertMove(m)));setHistory(h=>h.slice(0,-1));setFuture(f=>[m,...f]);};
+  const redo=()=>{const m=future[0];if(!m)return;setCube(c=>applyMove(c,m));setFuture(f=>f.slice(1));setHistory(h=>[...h,m]);};
+  const newChallenge=()=>{reset();setTimeout(scrambleCube,30);};
 
-  return <main className="shell">
-    <header className="topbar">
-      <div className="brand"><span className="brand-mark">C</span><div><b>CUBE MIND</b><small>Think. Solve. Grow.</small></div></div>
-      <nav>{["Play","Learn","Leaderboard","Analytics"].map(n=><button className={tab===n?"nav active":"nav"} key={n} onClick={()=>setTab(n)}>{n}</button>)}</nav>
-      <div className="avatar">SK</div>
+  useEffect(()=>{
+    if(solved&&history.length&&started){
+      const seconds=Math.floor((Date.now()-started)/1000);
+      setElapsed(seconds);setStarted(null);
+      if(!best||seconds<best){setBest(seconds);localStorage.setItem("cube-mind-best",String(seconds));}
+    }
+  },[solved,history.length,started,best]);
+
+  const visibleMoves=useMemo(()=>history.slice(-16),[history]);
+
+  return <main className="game-shell">
+    <header className="game-top">
+      <div className="game-brand"><span className="brand-cube">◆</span><div><b>CUBE MIND</b><small>THINK · SOLVE · GROW</small></div></div>
+      <div className="mode-switch">{modes.map(m=><button key={m.id} className={mode===m.id?"mode-chip active":"mode-chip"} onClick={()=>{setMode(m.id);reset();}}>{m.name}</button>)}</div>
+      <div className="top-actions"><span className="live-dot">● LIVE</span><button onClick={()=>setMenu(menu==="stats"?null:"stats")}>Stats</button><button className="avatar">SK</button></div>
     </header>
 
-    {tab!=="Play" ? <section className="placeholder">
-      <span className="eyebrow">{tab.toUpperCase()}</span>
-      <h1>{tab==="Learn"?"Learn the thinking.":tab==="Leaderboard"?"Compete on the challenge.":"See how you are improving."}</h1>
-      <p>{tab==="Learn"?"Notation, cube basics and algorithms will live here next.":"This area is reserved for the CUBE MIND progression system; the interactive game is already live on Play."}</p>
-      <button className="big-button" onClick={()=>setTab("Play")}>← Back to Play</button>
-    </section> : <>
-      <section className="hero">
-        <div><span className="eyebrow">INTERACTIVE CUBE CHALLENGE</span><h1>Small moves.<br/><em>Bigger mind.</em></h1><p>Think through the cube, make your moves, and watch your game performance improve over time.</p>
-          <div className="modes">{modes.map(m=><button className={mode===m.id?"mode selected":"mode"} key={m.id} onClick={()=>{setMode(m.id);reset();}}><strong>{m.title}</strong><span>{m.sub}</span></button>)}</div>
+    <section className="game-main">
+      <div className="hud-left">
+        <span className="hud-label">{mode==="daily"?"DAILY CHALLENGE":mode==="interview"?"60 SECOND CHALLENGE":"FREE PLAY"}</span>
+        <h1>{solved?"SOLVED!":"Solve the cube."}</h1>
+        <p>{solved?"Clean finish. Ready for another challenge?":"Swipe the cube faces to turn them. Drag outside the cube to orbit around it."}</p>
+        <div className="challenge-stat-row"><div><b>{history.length}</b><span>MOVES</span></div><div><b>{progress}%</b><span>PROGRESS</span></div><div><b>{best?best+"s":"—"}</b><span>BEST</span></div></div>
+      </div>
+
+      <div className="cube-game">
+        <div className="cube-badge"><span>3×3</span><b>{limit?String(remaining).padStart(3,"0")+"s":"∞"}</b><small>{limit?"TIME LEFT":"FREE PLAY"}</small></div>
+        <Cube3D cube={cube} onMove={onCubeMove} />
+        <div className="cube-actions">
+          <button onClick={undo} disabled={!history.length}>↶</button>
+          <button onClick={redo} disabled={!future.length}>↷</button>
+          <button className="primary" onClick={scrambleCube}>SCRAMBLE</button>
+          <button onClick={reset}>RESET</button>
         </div>
-        <div className="stats"><div><span>BEST TIME</span><b>{best?`${best}s`:"—"}</b></div><div><span>ATTEMPT</span><b>{String(elapsed).padStart(2,"0")}s</b></div><div><span>MOVES</span><b>{history.length}</b></div></div>
-      </section>
+      </div>
 
-      <section className="game-grid">
-        <div className="game-card">
-          <div className="game-head"><div><span className="pill">3×3 LIVE CUBE</span><h2>{solved?"Challenge complete!":"Your cube is ready."}</h2></div><div className="timer">{limit?`${String(Math.max(0,limit-elapsed)).padStart(2,"0")}s`:`${String(elapsed).padStart(2,"0")}s`}<small>{limit?"remaining":"time"}</small></div></div>
-          <CubeView cube={cube}/>
-          <div className="cube-tip">↔ Drag anywhere to freely rotate 360° · Use 360° View for continuous rotation · U D L R F B keys</div>
-          <div className="controls"><button onClick={undo} disabled={!history.length}>↶ Undo</button><button onClick={redo} disabled={!future.length}>↷ Redo</button><button className="primary" onClick={doScramble}>Scramble</button><button onClick={reset}>Reset</button></div>
-        </div>
+      <aside className="game-panel">
+        <div className="panel-head"><span>MOVE CONTROLS</span><button onClick={()=>setMenu(menu==="moves"?null:"moves")}>⌘</button></div>
+        <div className="face-buttons">{faces.map(f=><button key={f} onClick={()=>requestMove(f)}>{f}</button>)}</div>
+        <div className="face-buttons prime">{faces.map(f=><button key={f+"p"} onClick={()=>requestMove(f+"'")}>{f}&apos;</button>)}</div>
+        <div className="panel-section"><span>SCRAMBLE</span><p>{scramble.length?scramble.join(" "):"Generate a puzzle to begin."}</p></div>
+        <div className="panel-section"><span>RECENT MOVES</span><div className="move-history">{visibleMoves.length?visibleMoves.map((m,i)=><b key={i}>{m}</b):<i>—</i>}</div></div>
+        <div className="game-tip"><strong>HOW TO PLAY</strong><span>Swipe a face → turn that layer</span><span>Drag outside → rotate cube</span><span>Scroll → zoom</span><span>U D L R F B → keyboard</span></div>
+      </aside>
+    </section>
 
-        <aside className="side-card">
-          <div className="progress-head"><span>CHALLENGE PROGRESS</span><b>{progress}%</b></div><div className="progress"><span style={{width:`${progress}%`}}/></div>
-          <p className="notice">{notice}</p>
-          <h3>Move the cube</h3>
-          <div className="move-pad">{faces.map(f=><button key={f} onClick={()=>move(f)}>{f}</button>)}</div>
-          <div className="move-pad prime">{faces.map(f=><button key={f+"p"} onClick={()=>move(f+"'")}>{f}&apos;</button>)}</div>
-          <div className="quick"><button onClick={()=>move("R2")}>R2</button><button onClick={()=>move("U2")}>U2</button><button onClick={()=>move("F2")}>F2</button></div>
-          <div className="scramble-box"><span>SCRAMBLE</span><p>{scramble.length?scramble.join(" "):"Press Scramble to generate a puzzle."}</p></div>
-          <div className="history"><span>MOVE HISTORY</span><div>{currentMoves.length?currentMoves.map((m,i)=><b key={i}>{m}</b>):<i>No moves yet</i>}</div></div>
-          {solved && <div className="success">✓ SOLVED · {history.length} moves · {elapsed}s</div>}
-        </aside>
-      </section>
+    <footer className="game-bottom">
+      <button onClick={()=>setMenu(menu==="learn"?null:"learn")}>HOW TO SOLVE</button>
+      <button onClick={()=>setMenu(menu==="moves"?null:"moves")}>MOVES & NOTATION</button>
+      <button onClick={newChallenge}>NEW CHALLENGE</button>
+      <div className="progress-bar"><span style={{width:progress+"%"}}/></div>
+      <span>{progress}% COMPLETE</span>
+    </footer>
 
-      <section className="lower">
-        <div className="feature"><span>DAILY 5</span><h3>Five focused minutes.</h3><p>A short structured cube session for a daily cognitive reset.</p><button onClick={startDaily}>Start Daily 5 →</button></div>
-        <div className="feature"><span>HOW TO SOLVE</span><h3>Learn the thinking.</h3><p>Notation, layers and algorithms can become your next learning track.</p><button onClick={()=>setTab("Learn")}>Explore Learn →</button></div>
-        <div className="feature"><span>PERFORMANCE</span><h3>Measure your progress.</h3><p>Time, moves, progress, reversals and improvement — from gameplay.</p><button onClick={()=>setTab("Analytics")}>View Analytics →</button></div>
-      </section>
-    </>}
-
-    <footer><span>CUBE MIND</span><span>Gameplay indicators are not IQ or psychological scores.</span><span>Think. Solve. Grow.</span></footer>
+    {menu && <div className="game-overlay" onClick={()=>setMenu(null)}>
+      <div className="overlay-card" onClick={e=>e.stopPropagation()}>
+        <button className="close" onClick={()=>setMenu(null)}>×</button>
+        {menu==="moves"&&<><span className="hud-label">MOVES & NOTATION</span><h2>Control the cube like a cuber.</h2><p>Swipe any visible face to turn its layer. Use U D L R F B on the keyboard. Shift + a key makes a prime turn. Double turns are available from the move pad.</p><div className="notation-grid">{["U U' U2","R R' R2","F F' F2","D D' D2","L L' L2","B B' B2"].map(x=><b key={x}>{x}</b>)}</div></>}
+        {menu==="learn"&&<><span className="hud-label">HOW TO SOLVE</span><h2>Learn by doing.</h2><p>Start with notation and cube orientation, then learn the beginner layer-by-layer method. CUBE MIND will turn each concept into short interactive challenges.</p><button className="overlay-action" onClick={()=>setMenu(null)}>START PRACTICE</button></>}
+        {menu==="stats"&&<><span className="hud-label">GAME STATS</span><h2>Your attempt.</h2><div className="big-stats"><div><b>{elapsed}s</b><span>TIME</span></div><div><b>{history.length}</b><span>MOVES</span></div><div><b>{progress}%</b><span>PROGRESS</span></div><div><b>{best?best+"s":"—"}</b><span>PERSONAL BEST</span></div></div></>}
+      </div>
+    </div>}
   </main>;
 }
