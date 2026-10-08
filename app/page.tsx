@@ -148,7 +148,7 @@ export default function Home(){
     setSequence(algorithm);setCube(c=>applyAlgorithm(c,algorithm,size));setHistory(tokenizeMoves(algorithm));setFuture([]);setScramble([]);setMessage("Pattern applied");
   };
 
-  return <main className="game-shell">
+  return (\n    <main className="game-shell">
     <header className="game-top">
       <div className="game-brand"><span className="brand-cube">◆</span><div><b>CUBE MIND</b><small>THINK · SOLVE · GROW</small></div></div>
       <nav className="top-menu">{MODES.map(([id,label])=><button key={id} className={mode===id?"active":""} onClick={()=>setMode(id)}>{label}</button>)}</nav>
