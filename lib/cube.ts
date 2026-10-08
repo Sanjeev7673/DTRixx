@@ -7,11 +7,11 @@ export type Cubie = { id: string; p: [number, number, number]; stickers: Sticker
  // White opposite Yellow, Red opposite Orange, Blue opposite Green.
 export const COLORS: Record<Face, string> = {
   U: "#FFFFFF",
-  D: "#FFD500",
-  L: "#D71920",
-  R: "#FF5800",
-  F: "#0051BA",
-  B: "#009E60",
+  D: "#FFFF00",
+  L: "#FF0000",
+  R: "#FFA500",
+  F: "#0000FF",
+  B: "#008000",
 };
 
 export const FACE_NORMALS: Record<Face, [number, number, number]> = {
