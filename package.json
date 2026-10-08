@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "vercel-build": "node scripts/vercel-build.cjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.0",
@@ -20,6 +21,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@types/three": "^0.161.2",
     "@vercel/analytics": "^1.2.2",
+    "adm-zip": "^0.5.16",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.3",
