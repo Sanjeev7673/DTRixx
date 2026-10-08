@@ -8,7 +8,7 @@ export type Cubie = { id: string; p: [number, number, number]; stickers: Sticker
 export const COLORS: Record<Face, string> = {
   U: "#FFFFFF",
   D: "#FFD500",
-  L: "#C41E3A",
+  L: "#D71920",
   R: "#FF5800",
   F: "#0051BA",
   B: "#009E60",
