@@ -8,7 +8,8 @@ import {
 } from "../lib/cube";
 
 const Cube3D=dynamic(()=>import("../components/Cube3D"),{ssr:false,loading:()=> <div className="cube-loading">Loading cube engine…</div>});
-const SIZES=Array.from({length:14},(_,i)=>i+2);\nconst PAINT_COLORS:Record<string,string>={U:"#f8fafc",R:"#ff934d",F:"#36d399",D:"#ffd54a",L:"#ff5f73",B:"#5b8cff"};
+const SIZES=Array.from({length:14},(_,i)=>i+2);
+const PAINT_COLORS:Record<string,string>={U:"#f8fafc",R:"#ff934d",F:"#36d399",D:"#ffd54a",L:"#ff5f73",B:"#5b8cff"};
 const FACES=["U","R","F","D","L","B"] as const;
 const MODES=[["simulator","SIMULATOR"],["challenge","CHALLENGE"],["solver","SOLVER"]] as const;
 type Panel="moves"|"solver"|"patterns"|"colors"|"learn"|"stats"|null;
