@@ -8,7 +8,7 @@ import {
 } from "../lib/cube";
 
 const Cube3D=dynamic(()=>import("../components/Cube3D"),{ssr:false,loading:()=> <div className="cube-loading">Loading cube engine…</div>});
-const SIZES=Array.from({length:14},(_,i)=>i+2);
+const SIZES=Array.from({length:14},(_,i)=>i+2);\nconst PAINT_COLORS:Record<string,string>={U:"#f8fafc",R:"#ff934d",F:"#36d399",D:"#ffd54a",L:"#ff5f73",B:"#5b8cff"};
 const FACES=["U","R","F","D","L","B"] as const;
 const MODES=[["simulator","SIMULATOR"],["challenge","CHALLENGE"],["solver","SOLVER"]] as const;
 type Panel="moves"|"solver"|"patterns"|"colors"|"learn"|"stats"|null;
@@ -236,7 +236,7 @@ export default function Home(){
         {panel==="colors"&&<div className="overlay-content">
           <span className="eyebrow">COLOR PICKER</span><h2>Enter the cube in your hand.</h2><p>Paint the 54 stickers, check that each color appears nine times, then send the state to the 3×3 solver.</p>
           <div className="color-palette">{FACES.map(f=><button key={f} className={paintColor===f?"selected":""} onClick={()=>setPaintColor(f)}>{f}</button>)}</div>
-          <div className="sticker-net">{["U","R","F","D","L","B"].map((f,fi)=><div className={"net-face face-"+f} key={f}><span>{f}</span>{Array.from({length:9},(_,i)=>{const idx=fi*9+i;return <button key={idx} style={{backgroundColor:({"U":"#f8fafc","R":"#ff934d","F":"#36d399","D":"#ffd54a","L":"#ff5f73","B":"#5b8cff"} as any)[painted[idx]]||"#171a27"}} onClick={()=>setPainted(p=>p.map((v,j)=>j===idx?paintColor:v))}/>} )}</div>)}</div>
+          <div className="sticker-net">{["U","R","F","D","L","B"].map((f,fi)=><div className={"net-face face-"+f} key={f}><span>{f}</span>{Array.from({length:9},(_,i)=>{const idx=fi*9+i;return <button key={idx} style={{backgroundColor:PAINT_COLORS[painted[idx]]||"#171a27"}} onClick={()=>setPainted(p=>p.map((v,j)=>j===idx?paintColor:v))}/>} )}</div>)}</div>
           <div className="solver-actions"><button onClick={checkPainted}>CHECK</button><button className="primary-wide" onClick={()=>solveCurrent(painted.join(""))}>SOLVE PAINTED CUBE</button><button onClick={()=>setPainted(cubeFacelets(initialCube(3),3).split(""))}>RESET COLORS</button></div>
         </div>}
 
