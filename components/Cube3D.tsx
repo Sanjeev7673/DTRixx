@@ -36,8 +36,8 @@ function Sticker({
   onDown: (e: any) => void; onUp: (e: any) => void;
 }) {
   const unit = 2.45 / (size + 1.1);
-  const offset = unit * 0.9;
-  const s = unit * 1.72;
+  const offset = unit * 0.91;
+  const s = unit * 1.62;
 
   const rotation: Record<Face, [number, number, number]> = {
     F: [0, 0, 0], B: [0, Math.PI, 0],
@@ -120,8 +120,8 @@ function CubieMesh({
       }
     >
       <mesh>
-        <boxGeometry args={[side, side, side]} />
-        <meshStandardMaterial color="#10131d" roughness={0.5} />
+        <boxGeometry args={[side * 0.94, side * 0.94, side * 0.94]} />
+        <meshStandardMaterial color="#090909" roughness={0.34} metalness={0.02} />
       </mesh>
 
       {colors.map(([face, color]) => (
