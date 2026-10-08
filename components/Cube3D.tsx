@@ -145,8 +145,8 @@ function CubeScene({ cube, turn, onSwipe, setOrbiting }: {
   </Canvas>;
 }
 
-export default function Cube3D({ cube, onMove, disabled=false }: {
-  cube:Cubie[]; onMove:(move:string)=>void; disabled?:boolean;
+export default function Cube3D({ cube, onMove, command, disabled=false }: {
+  cube:Cubie[]; onMove:(move:string)=>void; command?:{id:number;move:string}; disabled?:boolean;
 }) {
   const [turn,setTurn]=useState<ActiveTurn|null>(null);
   const queued=useRef<Move|null>(null);
@@ -168,6 +168,10 @@ export default function Cube3D({ cube, onMove, disabled=false }: {
     };
     requestAnimationFrame(tick);
   };
+
+  useEffect(() => {
+    if (command?.move) request(command.move);
+  }, [command?.id]);
 
   return <div className="cube3d-root">
     <CubeScene cube={cube} turn={turn} onSwipe={request} setOrbiting={()=>{}} />
