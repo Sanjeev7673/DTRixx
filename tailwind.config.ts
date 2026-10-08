@@ -1,0 +1,1 @@
+rubiks-app-main/tailwind.config.ts
