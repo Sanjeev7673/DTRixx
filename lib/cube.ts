@@ -3,9 +3,15 @@ export type Face = "U" | "D" | "L" | "R" | "F" | "B";
 export type Sticker = { n: [number, number, number]; color: string };
 export type Cubie = { id: string; p: [number, number, number]; stickers: Sticker[] };
 
+// Standard Rubik's Cube color scheme:
+ // White opposite Yellow, Red opposite Orange, Blue opposite Green.
 export const COLORS: Record<Face, string> = {
-  U: "#f8fafc", D: "#ffd54a", L: "#ff5f73",
-  R: "#ff934d", F: "#36d399", B: "#5b8cff",
+  U: "#FFFFFF",
+  D: "#FFD500",
+  L: "#C41E3A",
+  R: "#FF5800",
+  F: "#0051BA",
+  B: "#009E60",
 };
 
 export const FACE_NORMALS: Record<Face, [number, number, number]> = {
