@@ -340,8 +340,16 @@ export default function Home() {
           <span className="brand-cube">◆</span>
           <div>
             <b>CUBE MIND</b>
-            <small>THINK · SOLVE · GROW</small>
+            <small>3D CUBE SIMULATOR</small>
           </div>
+        </div>
+
+        <div className="reference-size-menu">
+          {SIZES.map((value) => (
+            <button key={value} className={size === value ? "active" : ""} onClick={() => changeSize(value)}>
+              {value}×{value}
+            </button>
+          ))}
         </div>
 
         <nav className="top-menu">
@@ -370,6 +378,8 @@ export default function Home() {
 
         <div className="top-actions">
           <span className="live-dot">● LIVE</span>
+          <button className="top-icon" onClick={() => setPanel("learn")}>?</button>
+          <button className="top-icon" onClick={() => setPanel("stats")}>⚙</button>
           <select value={size} onChange={(e) => changeSize(Number(e.target.value))}>
             {SIZES.map((value) => (
               <option key={value} value={value}>
@@ -419,6 +429,11 @@ export default function Home() {
         </aside>
 
         <section className="cube-stage">
+          <div className="simulator-controls">
+            <label>SPEED <input type="range" min="80" max="500" defaultValue="220" /></label>
+            <button onClick={undo} disabled={!history.length}>↶</button>
+            <button onClick={redo} disabled={!future.length}>↷</button>
+          </div>
           <div className="stage-top">
             <span className="size-pill">{size}×{size}</span>
             <span className="status-pill">{solved ? "SOLVED" : "IN PLAY"}</span>
@@ -432,17 +447,16 @@ export default function Home() {
             command={command}
           />
 
-          <div className="stage-controls">
-            <button onClick={undo} disabled={!history.length}>↶</button>
-            <button onClick={redo} disabled={!future.length}>↷</button>
-            <button className="main-cta" onClick={scrambleCube}>
-              NEW SCRAMBLE
-            </button>
-            <button onClick={() => setPanel("moves")}>MOVES</button>
+          <div className="reference-controls">
+            <button onClick={() => setPanel("colors")}>COLOR PICKER</button>
+            <button onClick={() => setPanel("solver")}>SOLVER</button>
+            <button onClick={() => setPanel("patterns")}>PATTERNS</button>
+            <button onClick={scrambleCube}>SCRAMBLE</button>
+            <button onClick={resetCube}>RESET</button>
           </div>
 
           <div className="gesture-bar">
-            <span>SWIPE FACE</span>
+            <span>DRAG A FACE TO TURN</span>
             <i>→</i>
             <span>TURN LAYER</span>
             <i>•</i>
@@ -456,11 +470,11 @@ export default function Home() {
           </div>
         </section>
 
-        <aside className="right-rail">
+        <aside className="right-rail simulator-side">
           <div className="rail-card">
             <div className="card-title">
-              <span>MOVE PAD</span>
-              <button onClick={() => setPanel("moves")}>OPEN</button>
+              <span>MOVE LAYER</span>
+              <button onClick={() => setPanel("moves")}>MOVES</button>
             </div>
 
             <div className="move-grid">
