@@ -185,12 +185,12 @@ function CubeScene({
 
   return (
     <Canvas
-      camera={{ position: [4.8, 4.3, 6.3], fov: 32 }}
+      camera={{ position: [-5.2, 4.4, -6.2], fov: 34 }}
       dpr={[1, 1.8]}
       gl={{ antialias: true, alpha: true }}
       style={{ width: "100%", height: "100%", touchAction: "none" }}
     >
-      <color attach="background" args={["#080a13"]} />
+      <color attach="background" args={["#11161b"]} />
       <ambientLight intensity={2.1} />
       <directionalLight position={[5, 7, 8]} intensity={3.5} />
       <directionalLight position={[-5, 2, -4]} intensity={1.25} />
