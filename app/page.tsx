@@ -18,6 +18,8 @@ export default function Home(){
   const [started,setStarted]=useState<number|null>(null);
   const [best,setBest]=useState(0);
   const [menu,setMenu]=useState<"moves"|"learn"|"stats"|null>(null);
+  const [command,setCommand]=useState<{id:number;move:string}|undefined>();
+  const [commandId,setCommandId]=useState(0);
   const limit=modes.find(m=>m.id===mode)?.time??0;
   const solved=isSolved(cube);
   const progress=progressPercent(cube);
@@ -44,7 +46,9 @@ export default function Home(){
   const requestMove=(move:string)=>{
     if(limit && !started && !solved)setStarted(Date.now());
     // Cube3D animates the move first and calls commitMove after the 90° turn.
-    (window as any).__cubeMindMove?.(move);
+    const id=commandId+1;
+    setCommandId(id);
+    setCommand({id,move});
   };
 
   const onCubeMove=(move:string)=>commitMove(move);
@@ -99,7 +103,7 @@ export default function Home(){
 
       <div className="cube-game">
         <div className="cube-badge"><span>3×3</span><b>{limit?String(remaining).padStart(3,"0")+"s":"∞"}</b><small>{limit?"TIME LEFT":"FREE PLAY"}</small></div>
-        <Cube3D cube={cube} onMove={onCubeMove} />
+        <Cube3D cube={cube} onMove={onCubeMove} command={command} />
         <div className="cube-actions">
           <button onClick={undo} disabled={!history.length}>↶</button>
           <button onClick={redo} disabled={!future.length}>↷</button>
