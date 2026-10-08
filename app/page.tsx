@@ -11,43 +11,68 @@ const modes = [
   { id: "practice", title: "Practice", sub: "Explore without pressure", limit: 0 }
 ];
 
-function StickerPlane({ sticker }: { sticker: Sticker }) {
-  const [x,y,z] = sticker.n;
-  const transform =
-    x === 1 ? "translateZ(27px) rotateY(90deg)" :
-    x === -1 ? "translateZ(27px) rotateY(-90deg)" :
-    y === 1 ? "translateZ(27px) rotateX(-90deg)" :
-    y === -1 ? "translateZ(27px) rotateX(90deg)" :
-    z === 1 ? "translateZ(27px)" : "translateZ(-27px) rotateY(180deg)";
-  return <span className="sticker" style={{ background: sticker.color, transform }} />;
+function CubieFace({ color, face }: { color: string; face: "front"|"back"|"right"|"left"|"top"|"bottom" }) {
+  return <span className={`cubie-face ${face}`} style={{ background: color }} />;
 }
 
 function CubeView({ cube }: { cube: Cubie[] }) {
   const drag = useRef<{x:number;y:number}|null>(null);
-  const [rotation, setRotation] = useState({x:-24,y:-34});
+  const [rotation, setRotation] = useState({x:-28,y:-38});
+  const [autoRotate, setAutoRotate] = useState(false);
+
+  useEffect(() => {
+    if (!autoRotate) return;
+    const id = window.setInterval(() => {
+      setRotation(r => ({ x: r.x, y: r.y + 1.1 }));
+    }, 30);
+    return () => window.clearInterval(id);
+  }, [autoRotate]);
 
   const down = (e: PointerEvent<HTMLDivElement>) => {
-    drag.current = {x:e.clientX,y:e.clientY};
+    if (autoRotate) return;
+    drag.current = { x: e.clientX, y: e.clientY };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
+
   const move = (e: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current) return;
-    const dx = e.clientX-drag.current.x, dy = e.clientY-drag.current.y;
-    drag.current = {x:e.clientX,y:e.clientY};
-    setRotation(r => ({x:Math.max(-78,Math.min(78,r.x+dy*.55)),y:r.y+dx*.55}));
+    if (!drag.current || autoRotate) return;
+    const dx = e.clientX - drag.current.x;
+    const dy = e.clientY - drag.current.y;
+    drag.current = { x: e.clientX, y: e.clientY };
+    setRotation(r => ({ x: Math.max(-88, Math.min(88, r.x + dy * 0.5)), y: r.y + dx * 0.5 }));
   };
+
   const up = () => { drag.current = null; };
 
+  const colorAt = (cubie: Cubie, normal: [number,number,number]) =>
+    cubie.stickers.find(s => s.n[0] === normal[0] && s.n[1] === normal[1] && s.n[2] === normal[2])?.color ?? "#151a2b";
+
   return <div className="cube-stage" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
-    <div className="cube" style={{transform:`rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`}}>
-      {cube.map(c => <div key={c.id} className="cubie" style={{transform:`translate3d(${c.p[0]*58}px,${-c.p[1]*58}px,${c.p[2]*58}px)`}}>
-        {c.stickers.map((s,i)=><StickerPlane key={i} sticker={s}/>)}
-        <span className="cubie-core"/>
-      </div>)}
+    <div className="cube-wrap">
+      <div className="cube" style={{ transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)` }}>
+        {cube.map(c => (
+          <div key={c.id} className="cubie" style={{
+            transform: `translate3d(${c.p[0] * 62}px,${-c.p[1] * 62}px,${c.p[2] * 62}px)`
+          }}>
+            <CubieFace face="front" color={colorAt(c,[0,0,1])} />
+            <CubieFace face="back" color={colorAt(c,[0,0,-1])} />
+            <CubieFace face="right" color={colorAt(c,[1,0,0])} />
+            <CubieFace face="left" color={colorAt(c,[-1,0,0])} />
+            <CubieFace face="top" color={colorAt(c,[0,1,0])} />
+            <CubieFace face="bottom" color={colorAt(c,[0,-1,0])} />
+          </div>
+        ))}
+      </div>
     </div>
+    <button
+      type="button"
+      className={autoRotate ? "view-toggle active" : "view-toggle"}
+      onClick={(e) => { e.stopPropagation(); setAutoRotate(v => !v); }}
+    >
+      {autoRotate ? "⏸ Stop 360°" : "↻ 360° View"}
+    </button>
   </div>;
 }
-
 export default function Home() {
   const [cube,setCube] = useState<Cubie[]>(initialCube());
   const [history,setHistory] = useState<string[]>([]);
@@ -148,7 +173,7 @@ export default function Home() {
         <div className="game-card">
           <div className="game-head"><div><span className="pill">3×3 LIVE CUBE</span><h2>{solved?"Challenge complete!":"Your cube is ready."}</h2></div><div className="timer">{limit?`${String(Math.max(0,limit-elapsed)).padStart(2,"0")}s`:`${String(elapsed).padStart(2,"0")}s`}<small>{limit?"remaining":"time"}</small></div></div>
           <CubeView cube={cube}/>
-          <div className="cube-tip">↔ Drag to rotate the whole cube · U D L R F B keys · Shift + key = prime</div>
+          <div className="cube-tip">↔ Drag anywhere to freely rotate 360° · Use 360° View for continuous rotation · U D L R F B keys</div>
           <div className="controls"><button onClick={undo} disabled={!history.length}>↶ Undo</button><button onClick={redo} disabled={!future.length}>↷ Redo</button><button className="primary" onClick={doScramble}>Scramble</button><button onClick={reset}>Reset</button></div>
         </div>
 
